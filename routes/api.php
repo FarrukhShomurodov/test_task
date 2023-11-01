@@ -17,6 +17,17 @@ Route::group(['middleware' => "auth:sanctum"], function (){
     Route::post('category', [CategoryController::class, 'store']);
     Route::post('sub-category', [SubCategoryController::class, 'store']);
     Route::post('product',[ProductController::class, 'store']);
+
+    // Cart
+    Route::prefix('cart')->name('cart.')->group(function (){
+        Route::post('add', [CartController::class, 'add']);
+        Route::put('update/{cart}', [CartController::class, 'update']);
+        Route::delete('remove/{cart}', [CartController::class, 'destroy']);
+    });
+
+    // Order
+    Route::get('orders', [OrderController::class, 'index']);
+    Route::post('orders', [OrderController::class, 'store']);
 });
 
     // Category
@@ -30,13 +41,3 @@ Route::group(['middleware' => "auth:sanctum"], function (){
         Route::get('show-by-category/{parentCategory}', [ProductController::class, 'show_by_category']);
         Route::get('show_by_slug', [ProductController::class, 'show_by_slug']);
     });
-
-    // Cart
-    Route::prefix('cart')->name('cart.')->group(function (){
-        Route::post('add', [CartController::class, 'add']);
-        Route::put('update/{cart}', [CartController::class, 'update']);
-        Route::delete('remove/{cart}', [CartController::class, 'destroy']);
-    });
-
-    // Order
-    Route::get('orders', [OrderController::class, 'index']);
