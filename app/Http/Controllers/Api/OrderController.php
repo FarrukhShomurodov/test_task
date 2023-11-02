@@ -34,9 +34,9 @@ class OrderController extends Controller
 
     /**
      * @param Request $request
-     * @return OrderResource
+     * @return OrderResource|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function store(Request $request): OrderResource
+    public function store(Request $request)
     {
         if (Auth::check()) {
             $user = Auth::user();
@@ -58,8 +58,9 @@ class OrderController extends Controller
             $order = Order::query()->create([
                 'user_id' => $user->id ?? null, // Providing null as default if the user is not authenticated
                 'contact_info' => json_encode($contact_info),
-                'products' => json_encode($products),
+                'products' => json_encode($products[0]),
             ]);
+//            return response($order);
         }
 
 

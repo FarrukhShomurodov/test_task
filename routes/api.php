@@ -17,8 +17,6 @@ Route::group(['middleware' => "auth:sanctum"], function (){
     Route::post('category', [CategoryController::class, 'store']);
     Route::post('sub-category', [SubCategoryController::class, 'store']);
     Route::post('product',[ProductController::class, 'store']);
-
-
 });
 
     // Category
