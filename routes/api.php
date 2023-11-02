@@ -12,16 +12,14 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
-//Route::group(['middleware' => "auth:sanctum"], function (){
+Route::group(['middleware' => "auth:sanctum"], function (){
     Route::post('parent_category', [ParentCategoryController::class, 'store']);
     Route::post('category', [CategoryController::class, 'store']);
     Route::post('sub-category', [SubCategoryController::class, 'store']);
     Route::post('product',[ProductController::class, 'store']);
 
-    // Order
-    Route::get('orders', [OrderController::class, 'index']);
-    Route::post('orders', [OrderController::class, 'store']);
-//});
+
+});
 
     // Category
     Route::get('parent_category', [ParentCategoryController::class, 'index']);
@@ -41,3 +39,7 @@ Auth::routes();
         Route::put('update', [CartController::class, 'update']);
         Route::delete('remove', [CartController::class, 'destroy']);
     });
+
+    // Order
+    Route::post('orders', [OrderController::class, 'store']);
+    Route::get('orders', [OrderController::class, 'index']);
