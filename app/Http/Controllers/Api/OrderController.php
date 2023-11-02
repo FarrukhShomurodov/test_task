@@ -44,19 +44,25 @@ class OrderController extends Controller
             $contact_info = [
                 'email' => $user->email
             ];
-            $products = $cart->get('products');
+            $products = $cart->get('products')[0]->products;
             $cart->delete();
+            $order = Order::query()->create([
+                'user_id' => $user->id ?? null, // Providing null as default if the user is not authenticated
+                'contact_info' => $contact_info,
+                'products' => $products,
+            ]);
         } else {
             $contact_info = $request->input('contact_info');
             $products = Session::get('cart', []);
             Session::forget('cart');
+            $order = Order::query()->create([
+                'user_id' => $user->id ?? null, // Providing null as default if the user is not authenticated
+                'contact_info' => json_encode($contact_info),
+                'products' => json_encode($products),
+            ]);
         }
 
-        $order = Order::query()->create([
-            'user_id' => $user->id ?? null, // Providing null as default if the user is not authenticated
-            'contact_info' => json_encode($contact_info),
-            'products' => json_encode($products),
-        ]);
+
 
         return OrderResource::make($order);
     }
