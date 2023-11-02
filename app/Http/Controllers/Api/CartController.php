@@ -8,67 +8,106 @@ use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
     /**
      * @param CartRequest $request
-     * @return CartResource
+     * @return CartResource|\Illuminate\Contracts\Foundation\Application|ResponseFactory|Application|Response
      */
-    public function add(CartRequest $request): CartResource
+    public function add(CartRequest $request): Application|Response|CartResource|\Illuminate\Contracts\Foundation\Application|ResponseFactory
     {
-        $user = Auth::user();
-        $validated = $request->validated();
-        $product = [
-            'product_id' => $validated['product_id'],
-            'quantity' =>  $validated['quantity']
-        ];
+        if (Auth::check()) {
+            $user = Auth::user();
+            $validated = $request->validated();
+            $product = [
+                'product_id' => $validated['product_id'],
+                'quantity' => $validated['quantity']
+            ];
 
-        $productJSON = json_encode($product);
+            $productJSON = json_encode($product);
 
-        $cart = Cart::query()->create([
-            "user_id" => $user->id,
-            "products" => $productJSON,
-            "updated_at" => now(),
-            "created_at" => now(),
-        ]);
+            $cart = Cart::query()->create([
+                "user_id" => $user->id,
+                "products" => $productJSON,
+                "updated_at" => now(),
+                "created_at" => now(),
+            ]);
 
-        return CartResource::make($cart);
+            return CartResource::make($cart);
+        } else {
+            $cart = Session::get('cart', []);
+
+            $validated = $request->validated();
+            $product = [
+                'product_id' => $validated['product_id'],
+                'quantity' => $validated['quantity']
+            ];
+
+            $cart[] = $product;
+
+            Session::put('cart', $cart);
+
+            return response('Item added to the cart');
+        }
     }
 
+
     /**
-     * @param Cart $cart
      * @param CartRequest $request
-     * @return CartResource
+     * @return CartResource|\Illuminate\Contracts\Foundation\Application|ResponseFactory|Application|Response
      */
-    public function update(Cart $cart, CartRequest $request): CartResource
+    public function update(CartRequest $request): Application|Response|CartResource|\Illuminate\Contracts\Foundation\Application|ResponseFactory
     {
-        $validated = $request->validated();
-        $product = [
-            'product_id' => $validated['product_id'],
-            'quantity' =>  $validated['quantity']
-        ];
+        if (Auth::check()) {
+            $user = Auth::user();
+            $validated = $request->validated();
+            $product = [
+                'product_id' => $validated['product_id'],
+                'quantity' => $validated['quantity']
+            ];
 
-        $productJSON = json_encode($product);
+            $productJSON = json_encode($product);
 
-        $cart->update([
-            "products" => $productJSON,
-            "updated_at" => now(),
-        ]);
+            $user->cart()->update([
+                "products" => $productJSON,
+                "updated_at" => now(),
+            ]);
 
-        return CartResource::make($cart);
+            return CartResource::make($user->cart()->get());
+        } else {
+            $cartItems = Session::get('cart', []);
+            $validated = $request->validated();
+            $productId = $validated['product_id'];
+
+            foreach ($cartItems as $key => $item) {
+                if ($item['product_id'] === $productId) {
+                    $cartItems[$key]['quantity'] = $validated['quantity'];
+                    break;
+                }
+            }
+
+            Session::put('cart', $cartItems);
+
+            return response('Cart item updated for guest user');
+        }
     }
 
     /**
-     * @param Cart $cart
      * @return \Illuminate\Contracts\Foundation\Application|ResponseFactory|Application|Response
      */
-    public function destroy(Cart $cart): \Illuminate\Contracts\Foundation\Application|ResponseFactory|Application|Response
+    public function destroy(): \Illuminate\Contracts\Foundation\Application|ResponseFactory|Application|Response
     {
-        $cart->delete();
-        return response('cart has been deleted');
+        if (Auth::check()) {
+            $user = Auth::user();
+            $user->cart()->delete();
+            return response('Cart has been deleted');
+        } else {
+            Session::forget('cart');
+            return response('Cart has been cleared for guest users');
+        }
     }
 }
